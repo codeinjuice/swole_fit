@@ -68,4 +68,23 @@ class ExerciseApiService {
       throw Exception('Error fetching exercise: $e');
     }
   }
+
+  /// 네번째 API: 특정 부위의 운동 목록 가져오기
+  /// GET https://exercisedb.p.rapidapi.com/exercises/target/{target}
+  static Future<List<dynamic>> getExercisesByTarget(String target) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/exercises/target/$target'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load exercises for target $target: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching exercises for target $target: $e');
+    }
+  }
 }
