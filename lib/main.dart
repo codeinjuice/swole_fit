@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'pages/workouts_page.dart';
+import 'pages/routines_page.dart';
+import 'pages/calendar_page.dart';
+import 'pages/settings_page.dart';
 
 void main() {
   runApp(const SwolfitApp());
@@ -71,86 +75,6 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Settings',
           ),
         ],
-      ),
-    );
-  }
-}
-
-class WorkoutsPage extends StatelessWidget {
-  const WorkoutsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Workouts'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: const Center(
-        child: Text(
-          'Workouts Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
-class RoutinesPage extends StatelessWidget {
-  const RoutinesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Routines'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: const Center(
-        child: Text(
-          'Routines Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
-class CalendarPage extends StatelessWidget {
-  const CalendarPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Calendar'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: const Center(
-        child: Text(
-          'Calendar Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: const Center(
-        child: Text(
-          'Settings Page',
-          style: TextStyle(fontSize: 24),
-        ),
       ),
     );
   }
