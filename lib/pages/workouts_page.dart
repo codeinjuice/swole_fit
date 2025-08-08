@@ -389,99 +389,195 @@ class _ExerciseDetailPageState extends State<ExerciseDetailPage> {
                         style: TextStyle(fontSize: 16),
                       ),
                     )
-                  : Stack(
-                      children: [
-                        // Background Image
-                        if (exerciseImageBytes != null)
-                          Positioned.fill(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  image: MemoryImage(exerciseImageBytes!),
-                                  fit: BoxFit.cover,
-                                  colorFilter: ColorFilter.mode(
-                                    Colors.black.withOpacity(0.3),
-                                    BlendMode.darken,
+                  : SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Content Section
+                          Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Exercise Name Header
+                                Text(
+                                  exerciseDetail!['name'] ?? 'Unknown',
+                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).primaryColor,
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                        // Content
-                        SingleChildScrollView(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (exerciseDetail!['gifUrl'] != null)
-                                Container(
-                                  width: double.infinity,
-                                  height: 200,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.grey.shade300),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      exerciseDetail!['gifUrl'],
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Center(
-                                          child: Icon(
-                                            Icons.error,
-                                            size: 50,
-                                            color: Colors.red,
-                                          ),
-                                        );
-                                      },
+                                const SizedBox(height: 8),
+                                
+                                // Target muscle chip
+                                if (exerciseDetail!['target'] != null)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      exerciseDetail!['target'],
+                                      style: TextStyle(
+                                        color: Theme.of(context).primaryColor,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   ),
+                                
+                                const SizedBox(height: 24),
+                                
+                                // GIF Section (if available)
+                                if (exerciseDetail!['gifUrl'] != null) ...[
+                                  Container(
+                                    width: double.infinity,
+                                    height: 200,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Image.network(
+                                        exerciseDetail!['gifUrl'],
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade200,
+                                              borderRadius: BorderRadius.circular(16),
+                                            ),
+                                            child: const Center(
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.error,
+                                                    size: 40,
+                                                    color: Colors.grey,
+                                                  ),
+                                                  SizedBox(height: 8),
+                                                  Text(
+                                                    'GIF 로딩 실패',
+                                                    style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 36),
+                                ],
+                                
+                                // Exercise Details Grid
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '운동 정보',
+                                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildDetailRow('장비', exerciseDetail!['equipment'] ?? 'Unknown'),
+                                      if (exerciseDetail!['bodyPart'] != null) ...[
+                                        const SizedBox(height: 12),
+                                        _buildDetailRow('신체 부위', exerciseDetail!['bodyPart']),
+                                      ],
+                                    ],
+                                  ),
                                 ),
-                              const SizedBox(height: 24),
-                              _buildInfoCard('운동명', exerciseDetail!['name'] ?? 'Unknown'),
-                              const SizedBox(height: 16),
-                              _buildInfoCard('부위', exerciseDetail!['target'] ?? 'Unknown'),
-                              const SizedBox(height: 16),
-                              _buildInfoCard('장비', exerciseDetail!['equipment'] ?? 'Unknown'),
-                              const SizedBox(height: 16),
-                              _buildInfoCard('운동 ID', exerciseDetail!['id']?.toString() ?? 'Unknown'),
-                              if (exerciseDetail!['bodyPart'] != null) ...[
-                                const SizedBox(height: 16),
-                                _buildInfoCard('신체 부위', exerciseDetail!['bodyPart']),
+                                
+                                const SizedBox(height: 24),
+                                
+                                // Exercise Image Section (at the bottom)
+                                if (exerciseImageBytes != null)
+                                  Container(
+                                    width: double.infinity,
+                                    height: 270,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Image.memory(
+                                        exerciseImageBytes!,
+                                        fit: BoxFit.contain,
+                                        alignment: Alignment.center,
+                                      ),
+                                    ),
+                                  ),
+                                
+                                const SizedBox(height: 30),
                               ],
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
     );
   }
 
-  Widget _buildInfoCard(String title, String value) {
-    return Card(
-      color: Colors.white.withOpacity(0.9),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
+  Widget _buildDetailRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
             ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ],
+          ),
         ),
-      ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
