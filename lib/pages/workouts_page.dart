@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import '../services/exercise_api_service.dart';
 
 class WorkoutsPage extends StatefulWidget {
@@ -9,26 +10,26 @@ class WorkoutsPage extends StatefulWidget {
 }
 
 class _WorkoutsPageState extends State<WorkoutsPage> {
-  List<String> targetList = [];
+  List<String> bodyPartList = [];
   bool isLoading = false;
   String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadTargetList();
+    _loadBodyPartList();
   }
 
-  Future<void> _loadTargetList() async {
+  Future<void> _loadBodyPartList() async {
     setState(() {
       isLoading = true;
       errorMessage = null;
     });
 
     try {
-      final targets = await ExerciseApiService.getTargetList();
+      final bodyParts = await ExerciseApiService.getBodyPartList();
       setState(() {
-        targetList = targets;
+        bodyPartList = bodyParts;
         isLoading = false;
       });
     } catch (e) {
@@ -48,7 +49,7 @@ class _WorkoutsPageState extends State<WorkoutsPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadTargetList,
+            onPressed: _loadBodyPartList,
           ),
         ],
       ),
@@ -66,7 +67,7 @@ class _WorkoutsPageState extends State<WorkoutsPage> {
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: _loadTargetList,
+                        onPressed: _loadBodyPartList,
                         child: const Text('Retry'),
                       ),
                     ],
@@ -78,12 +79,12 @@ class _WorkoutsPageState extends State<WorkoutsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '운동 부위 선택',
+                        '신체 부위 선택',
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        '운동하고 싶은 부위를 선택하세요:',
+                        '운동하고 싶은 신체 부위를 선택하세요:',
                         style: TextStyle(fontSize: 16),
                       ),
                       const SizedBox(height: 16),
@@ -96,9 +97,9 @@ class _WorkoutsPageState extends State<WorkoutsPage> {
                           mainAxisSpacing: 12,
                           childAspectRatio: 1.5,
                         ),
-                        itemCount: targetList.length,
+                        itemCount: bodyPartList.length,
                         itemBuilder: (context, index) {
-                          final target = targetList[index];
+                          final bodyPart = bodyPartList[index];
                           return Card(
                             elevation: 4,
                             child: InkWell(
@@ -106,7 +107,7 @@ class _WorkoutsPageState extends State<WorkoutsPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ExercisesByTargetPage(target: target),
+                                    builder: (context) => ExercisesByBodyPartPage(bodyPart: bodyPart),
                                   ),
                                 );
                               },
@@ -116,13 +117,13 @@ class _WorkoutsPageState extends State<WorkoutsPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      _getTargetIcon(target),
+                                      _getBodyPartIcon(bodyPart),
                                       size: 32,
                                       color: Theme.of(context).primaryColor,
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      target,
+                                      bodyPart,
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -142,8 +143,8 @@ class _WorkoutsPageState extends State<WorkoutsPage> {
     );
   }
 
-  IconData _getTargetIcon(String target) {
-    switch (target.toLowerCase()) {
+  IconData _getBodyPartIcon(String bodyPart) {
+    switch (bodyPart.toLowerCase()) {
       case 'back':
         return Icons.accessibility_new;
       case 'cardio':
@@ -170,16 +171,16 @@ class _WorkoutsPageState extends State<WorkoutsPage> {
   }
 }
 
-class ExercisesByTargetPage extends StatefulWidget {
-  final String target;
+class ExercisesByBodyPartPage extends StatefulWidget {
+  final String bodyPart;
 
-  const ExercisesByTargetPage({super.key, required this.target});
+  const ExercisesByBodyPartPage({super.key, required this.bodyPart});
 
   @override
-  State<ExercisesByTargetPage> createState() => _ExercisesByTargetPageState();
+  State<ExercisesByBodyPartPage> createState() => _ExercisesByBodyPartPageState();
 }
 
-class _ExercisesByTargetPageState extends State<ExercisesByTargetPage> {
+class _ExercisesByBodyPartPageState extends State<ExercisesByBodyPartPage> {
   List<dynamic> exercises = [];
   bool isLoading = false;
   String? errorMessage;
@@ -197,7 +198,7 @@ class _ExercisesByTargetPageState extends State<ExercisesByTargetPage> {
     });
 
     try {
-      final exerciseList = await ExerciseApiService.getExercisesByTarget(widget.target);
+      final exerciseList = await ExerciseApiService.getExercisesByBodyPart(widget.bodyPart);
       setState(() {
         exercises = exerciseList;
         isLoading = false;
@@ -214,7 +215,7 @@ class _ExercisesByTargetPageState extends State<ExercisesByTargetPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.target} 운동'),
+        title: Text('${widget.bodyPart} 운동'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
@@ -312,6 +313,7 @@ class ExerciseDetailPage extends StatefulWidget {
 
 class _ExerciseDetailPageState extends State<ExerciseDetailPage> {
   Map<String, dynamic>? exerciseDetail;
+  Uint8List? exerciseImageBytes;
   bool isLoading = false;
   String? errorMessage;
 
@@ -328,9 +330,15 @@ class _ExerciseDetailPageState extends State<ExerciseDetailPage> {
     });
 
     try {
-      final detail = await ExerciseApiService.getExerciseById(widget.exerciseId);
+      // 운동 상세 정보와 이미지를 동시에 로드
+      final results = await Future.wait([
+        ExerciseApiService.getExerciseById(widget.exerciseId),
+        ExerciseApiService.getExerciseImage(widget.exerciseId),
+      ]);
+
       setState(() {
-        exerciseDetail = detail;
+        exerciseDetail = results[0] as Map<String, dynamic>;
+        exerciseImageBytes = results[1] as Uint8List;
         isLoading = false;
       });
     } catch (e) {
@@ -381,56 +389,78 @@ class _ExerciseDetailPageState extends State<ExerciseDetailPage> {
                         style: TextStyle(fontSize: 16),
                       ),
                     )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (exerciseDetail!['gifUrl'] != null)
-                            Container(
-                              width: double.infinity,
-                              height: 200,
+                  : Stack(
+                      children: [
+                        // Background Image
+                        if (exerciseImageBytes != null)
+                          Positioned.fill(
+                            child: Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade300),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  exerciseDetail!['gifUrl'],
+                                image: DecorationImage(
+                                  image: MemoryImage(exerciseImageBytes!),
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Center(
-                                      child: Icon(
-                                        Icons.error,
-                                        size: 50,
-                                        color: Colors.red,
-                                      ),
-                                    );
-                                  },
+                                  colorFilter: ColorFilter.mode(
+                                    Colors.black.withOpacity(0.3),
+                                    BlendMode.darken,
+                                  ),
                                 ),
                               ),
                             ),
-                          const SizedBox(height: 24),
-                          _buildInfoCard('운동명', exerciseDetail!['name'] ?? 'Unknown'),
-                          const SizedBox(height: 16),
-                          _buildInfoCard('부위', exerciseDetail!['target'] ?? 'Unknown'),
-                          const SizedBox(height: 16),
-                          _buildInfoCard('장비', exerciseDetail!['equipment'] ?? 'Unknown'),
-                          const SizedBox(height: 16),
-                          _buildInfoCard('운동 ID', exerciseDetail!['id']?.toString() ?? 'Unknown'),
-                          if (exerciseDetail!['bodyPart'] != null) ...[
-                            const SizedBox(height: 16),
-                            _buildInfoCard('신체 부위', exerciseDetail!['bodyPart']),
-                          ],
-                        ],
-                      ),
+                          ),
+                        // Content
+                        SingleChildScrollView(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (exerciseDetail!['gifUrl'] != null)
+                                Container(
+                                  width: double.infinity,
+                                  height: 200,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.grey.shade300),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      exerciseDetail!['gifUrl'],
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return const Center(
+                                          child: Icon(
+                                            Icons.error,
+                                            size: 50,
+                                            color: Colors.red,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(height: 24),
+                              _buildInfoCard('운동명', exerciseDetail!['name'] ?? 'Unknown'),
+                              const SizedBox(height: 16),
+                              _buildInfoCard('부위', exerciseDetail!['target'] ?? 'Unknown'),
+                              const SizedBox(height: 16),
+                              _buildInfoCard('장비', exerciseDetail!['equipment'] ?? 'Unknown'),
+                              const SizedBox(height: 16),
+                              _buildInfoCard('운동 ID', exerciseDetail!['id']?.toString() ?? 'Unknown'),
+                              if (exerciseDetail!['bodyPart'] != null) ...[
+                                const SizedBox(height: 16),
+                                _buildInfoCard('신체 부위', exerciseDetail!['bodyPart']),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
     );
   }
 
   Widget _buildInfoCard(String title, String value) {
     return Card(
+      color: Colors.white.withOpacity(0.9),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
